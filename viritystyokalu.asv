@@ -5,8 +5,12 @@ function [Kc, tauI, tauD] = viritystyokalu()
     Kc = 0;
     tauI = 0;
     tauD = 0;
-        
+    
+    % Viritettävä suure
+    tauc = 0;
+    
     % Tarkistusarvot
+    tarkistus1 = false;
     tarkistus2 = false;
     
     kyssari = 'Syötä prosessin viivetermi: ';
@@ -17,7 +21,6 @@ function [Kc, tauI, tauD] = viritystyokalu()
     
     kyssari = 'Onko järjestelmä integroiva? (Y/N) ';
     int = input(kyssari, 's');
-    int = upper(int);
     
     if int == 'Y' 
         
@@ -28,27 +31,9 @@ function [Kc, tauI, tauD] = viritystyokalu()
             
             kyssari = 'Onko järjestelmässä napaa? (Y/N) ';
             intnapa = input(kyssari, 's');
-            intnapa = upper(intnapa);
-
             
-            if intnapa == 'Y' 
-                tauc = theta0;
+            if intnapa = 'Y' 
                 
-                while tarkistus2 == false 
-                    
-                    kyssari = 'Syötä navan aikavakio: ';
-                    tau2 = input(kyssari);
-                    
-                    [Kc, tauI, tauD] = intnapasimc(theta0, tau2, k, tauc);
-                    fprintf('Viritysparametrilla tau_c = %d saatiin viritysparametreiksi: \n', tauc);
-                    fprintf('Kc = %d \n', Kc);
-                    fprintf('tauI = %d \n', tauI);
-                    fprintf('tauD = %d \n', tauD);
-
-                    [tauc, tarkistus2] = tarkistus(tauc);
-                    
-                end
-                return;
             else
                 
                 tauc = theta0;
@@ -59,38 +44,18 @@ function [Kc, tauI, tauD] = viritystyokalu()
                     fprintf('Kc = %d \n', Kc);
                     fprintf('tauI = %d \n', tauI);
 
-                    [tauc, tarkistus2] = tarkistus(tauc);
+                    [tauc, tarkistus2] = tarkistus(tau);
                 
                 end
-                return;
+                
             end
             
         elseif int_lkm == 2
-
-            tauc = theta0;
-            while tarkistus2 == false 
-
-                [Kc, tauI, tauD] = doupintsimc(theta0, k, tauc);
-                fprintf('Viritysparametrilla tau_c = %d saatiin viritysparametreiksi: \n', tauc);
-                fprintf('Kc = %d \n', Kc);
-                fprintf('tauI = %d \n', tauI);
-                fprintf('tauD = %d \n', tauD);
-
-                [tauc, tarkistus2] = tarkistus(tauc);
-
-            end
-            return;
             
         else
             disp('Valitettavasti tälle mallille ei voida laskea viritysparametrejä');
             return;
         end
-    else
-        [Kc, tauI] = cleardelay(theta0, k);
-        fprintf('SIMC-virityksellä viritysparametreiksi saatiin: ');
-        fprintf('Kc = %d \n', Kc);
-        fprintf('tauI = %d \n', tauI);
-        return;
     end
 
     % Ohjelma kysyy käyttäjältä prosessin navat ja nollat
@@ -172,6 +137,8 @@ function [Kc, tauI, tauD] = viritystyokalu()
             disp('Syöttäisitkö jommankumman tarjotuista vaihtoehdoista? (PI/PID) ');
         end
     end
+
+
     
 end
 
@@ -265,11 +232,6 @@ function [tau1, tau2, theta] = pidapp(navat, nollat, theta0)
             % nollien ei pitäisi olla nolla eli ei tehdä mitään
         end
     end
-end
-
-function[Kc, tauI] = cleardelay(theta, k)
-    tauI = 0.08*theta;
-    Kc = 0.5/k*tauI/theta;
 end
 
 function [Kc, tauI] = intsimc(theta, k, tauc)
