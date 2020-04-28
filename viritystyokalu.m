@@ -1,21 +1,22 @@
 
 function [Kc, tauI, tauD] = viritystyokalu()
-% VIRITYSTYOKALU Laskee PI/PID- sÃ¤Ã¤timelle viritysparametreja
+% VIRITYSTYOKALU Laskee PI/PID- säätimelle viritysparametreja
 % SIMC-viritysmetodin mukaan
 %    
-%   Parametrit annetaan sÃ¤Ã¤timen kaskadinotaatiolle
+%   Parametrit annetaan säätimen kaskadinotaatiolle
 %
-%   Ohjelma antaa ohjeita kÃ¤ytÃ¶n aikana
-%   ViritystyÃ¶kalulle ei tarvitse antaa parametreja
+%   Ohjelma antaa ohjeita käytön aikana
+%   Viritystyökalulle ei tarvitse antaa parametreja
 %   Palauttaa kolme parametria;
 %       Vahvistuksen Kc
 %       Integraattorin aikavakion Ti
 %       Derivaattorin aikavakion Td
 %
-%   Oletuksena viritysparametri tau_c = theta. Voidaan vaihtaa 
+%   Oletuksena viritysparametri tau_c = theta. Voidaan vaihtaa,
+%   jos tulokset eivät ole hyviä oletusasetuksella
 
 
-    % Viritysparametrit mitï¿½ lasketaan
+    % Viritysparametrit mitä lasketaan
     Kc = 0;
     tauI = 0;
     tauD = 0;
@@ -23,38 +24,38 @@ function [Kc, tauI, tauD] = viritystyokalu()
     % Tarkistusarvot
     tarkistus2 = false;
     
-    kyssari = 'Syï¿½tï¿½ prosessin viiveen suuruus (Jos viivettÃ¤ ei ole, syÃ¶tÃ¤ 0): ';
+    kyssari = 'Syötä prosessin viiveen suuruus (Jos viivettä ei ole, syötä 0): ';
     theta0 = input(kyssari);
 
-    kyssari = 'Syï¿½tï¿½ prosessin DC-vahvistus: ';
+    kyssari = 'Syötä prosessin DC-vahvistus: ';
     k = input(kyssari);
     
-    kyssari = 'Onko jï¿½rjestelmï¿½ integroiva? (Y/N) ';
+    kyssari = 'Onko järjestelmä integroiva? (K/E) ';
     int = input(kyssari, 's');
     int = upper(int);
     
-    if int == 'Y' 
+    if int == 'K' 
         
-        kyssari = 'Montako integraattioria jï¿½rjestelmï¿½ssï¿½ on? ';
+        kyssari = 'Montako integraattioria järjestelmässä on? ';
         int_lkm = input(kyssari);
         
         if int_lkm == 1
             
-            kyssari = 'Onko jï¿½rjestelmï¿½ssï¿½ napaa? (Y/N) ';
+            kyssari = 'Onko järjestelmässä napaa? (K/E) ';
             intnapa = input(kyssari, 's');
             intnapa = upper(intnapa);
 
             
-            if intnapa == 'Y' 
+            if intnapa == 'K' 
                 tauc = theta0;
                 
                 while tarkistus2 == false 
                     
-                    kyssari = 'Syï¿½tï¿½ navan aikavakio: ';
+                    kyssari = 'Syötä navan aikavakio: ';
                     tau2 = input(kyssari);
                     
                     if tau2 <= 0 
-                       error('Siirtofunktio epÃ¤stabiili, ei voida laskea viritysparametrejÃ¤'); 
+                       error('Siirtofunktio epästabiili, ei voida laskea viritysparametreja'); 
                     end
                     
                     [Kc, tauI, tauD] = intnapasimc(theta0, tau2, k, tauc);
@@ -100,58 +101,74 @@ function [Kc, tauI, tauD] = viritystyokalu()
             return;
             
         else
-            disp('Valitettavasti tï¿½lle mallille ei voida laskea viritysparametrejï¿½');
+            disp('Valitettavasti tälle mallille ei voida laskea viritysparametreja');
             return;
         end
-    else
-        [Kc, tauI] = cleardelay(theta0, k);
-        fprintf('SIMC-virityksellï¿½ viritysparametreiksi saatiin: ');
-        fprintf('Kc = %d \n', Kc);
-        fprintf('tauI = %d \n', tauI);
-        return;
+    
     end
 
-    % Ohjelma kysyy kï¿½yttï¿½jï¿½ltï¿½ prosessin navat ja nollat
-    kyssari = 'Syï¿½tï¿½ prosessin napojen aikavakiot vektorina: ';
+    % Ohjelma kysyy käyttäjältä prosessin navat ja nollat
+    kyssari = 'Syötä prosessin napojen aikavakiot vektorina: ';
     navat = input(kyssari);
     
     for aikavakio = navat
         if aikavakio <= 0
-            error('Siirtofunktio epÃ¤stabiili, viritysparametrejÃ¤ ei voida laskea');
+            error('Siirtofunktio epästabiili, viritysparametreja ei voida laskea');
         end
     end
     
-    kyssari = 'Syï¿½tï¿½ prosessin nollien aikavakiot vektorina: ';
+    kyssari = 'Syötä prosessin nollien aikavakiot vektorina: ';
     nollat = input(kyssari);
 
     tarkistus1 = false;
     tarkistus2 = false;
-
-    % Tarkastus sille, onko kyseessï¿½ aito tai vahvasti aito siirtofunktio (onko napoja enemmï¿½n
-    % tai yhtï¿½paljon kuin nollia)
-    if length(navat) < length(nollat)
-        error('Siirtofunktio on epÃ¤aito, viritysparametrejÃ¤ ei voida laskea');
+    
+    for aikavakio = nollat
+        if aikavakio == 0
+            error('Nollan aikavakio ei voi olla arvo nolla');
+        end
     end
 
-    % Jï¿½rjestï¿½ï¿½ vektorit suurimmasta pienimpï¿½ï¿½n 
+    % Tarkastus sille, onko kyseessä aito tai vahvasti aito siirtofunktio
+    % (onko napoja enemmän
+    % tai yhtäpaljon kuin nollia)
+    if length(navat) < length(nollat)
+        error('Siirtofunktio on epäaito, viritysparametrejä ei voida laskea');
+    end
+
+    % Järjestää vektorit suurimmasta pienimpään 
     navat = sort(navat, 'descend');
     nollat = sort(nollat, 'descend');
     
+    % Sievennys!
+    % Etsii yhteiset tekijät vectoreista
+    C = intersect(navat, nollat);
     
+    % Poistetaan nämä tekijät
+    for sievennettava = C
+        navat(navat == sievennettava) = [];
+        nollat(nollat == sievennettava) = [];
+    end
+    % Navat ja nollat ovat nyt sievennetty
+    
+    % Onko puhdas viive eli onko napoja ja nollia ollenkaan
+    if isempty(nollat) && isempty(navat)
+         [Kc, tauI] = cleardelay(theta0, k);
+         fprintf('SIMC-virityksell viritysparametreiksi saatiin: ');
+         fprintf('Kc = %d \n', Kc);
+         fprintf('tauI = %d \n', tauI);
+         return;
+    end
 
     while tarkistus1 == false
-        kyssari = 'Haluatko virityksen PI vai PID sÃ¤Ã¤timelle? (PI/PID) ';
+        kyssari = 'Haluatko virityksen PI vai PID säätimelle? (PI/PID) ';
         saadin = input(kyssari, 's');
         saadin = upper(saadin);
-        disp(saadin);
-        tau1 = 0;
-        tau2 = 0;
-        theta = 0;
 
         if strcmp('PI', saadin) == 1
 
             % PI viritys
-            % Approksimaatio ensimmï¿½iseen kertaluokkaan
+            % Approksimaatio ensimmäiseen kertaluokkaan
             [tau1, theta] = piapp(navat, nollat, theta0);
 
             % Valitaan oletusarvo viritysparametrille tauc
@@ -176,6 +193,7 @@ function [Kc, tauI, tauD] = viritystyokalu()
             % PID viritys
 
             [tau1, tau2, theta] = pidapp(navat, nollat, theta0);
+            tauc = theta;
 
             while tarkistus2 == false
 
@@ -194,7 +212,7 @@ function [Kc, tauI, tauD] = viritystyokalu()
             tarkistus1 = true;
 
         else
-            disp('Syï¿½ttï¿½isitkï¿½ jommankumman tarjotuista vaihtoehdoista? (PI/PID) ');
+            disp('Syöttäisitkö jommankumman tarjotuista vaihtoehdoista? (PI/PID) ');
         end
     end
     
@@ -202,18 +220,17 @@ end
 
 function [tauc, tarkistus1] = tarkistus(tauc, theta)
 
-    kyssari = ('Oletko tyytyvï¿½inen tuloksiin? (Y/N) ');
+    kyssari = ('Oletko tyytyväinen tuloksiin? (K/E) ');
     vast = input(kyssari, 's');
     vast = upper(vast);
-    if vast == 'Y'
+    if vast == 'K'
         tarkistus1 = true;
-        tauc = tauc;
 
-    elseif vast == 'N'
-        kyssari = ('Syï¿½tï¿½ uusi tau_c (oltava suurempi/yhtÃ¤suuri kuin theta): ');
+    elseif vast == 'E'
+        kyssari = ('Syötä uusi tau_c (oltava suurempi/yhtäsuuri kuin theta): ');
         tauc_new = input(kyssari);
         while tauc_new < theta
-            kyssari = ('SyÃ¶tÃ¤ uusi tau_c (oltava suurempi/yhtÃ¤suuri kuin theta): ');
+            kyssari = ('Syötä uusi tau_c (oltava suurempi/yhtäsuuri kuin theta): ');
             tauc_new = input(kyssari);
         end
         tauc = tauc_new;
@@ -226,7 +243,7 @@ end
 function [tau1, theta] = piapp(navat, nollat, theta0)
 
     for i = 1:length(navat)
-        % mitï¿½ navoille tehdï¿½ï¿½n
+        % mitä navoille tehdään
         if i == 1
             tau1 = navat(i);
             theta = theta0;
@@ -239,7 +256,7 @@ function [tau1, theta] = piapp(navat, nollat, theta0)
     end
 
     for i = 1:length(nollat)
-        % mitï¿½ nollille tehdï¿½ï¿½n
+        % mitä nollille tehdään
         if nollat(i) < 0
             % negatiiviset nollat
             theta = theta + abs(nollat(i));
@@ -254,7 +271,7 @@ function [tau1, theta] = piapp(navat, nollat, theta0)
             end
 
         else 
-            error('Nollat eivÃ¤t voi olla arvoa nolla, viritysparametreja ei voida laskea');
+            error('Nollat eivät voi olla arvoa nolla, viritysparametreja ei voida laskea');
             
         end
     end
@@ -263,7 +280,7 @@ end
 
 function [tau1, tau2, theta] = pidapp(navat, nollat, theta0) 
     for i = 1:length(navat)
-        % mitï¿½ navoille tehdï¿½ï¿½n
+        % mitä navoille tehdään
         if i == 1
             tau1 = navat(i);
             theta = theta0;
@@ -278,7 +295,7 @@ function [tau1, tau2, theta] = pidapp(navat, nollat, theta0)
     end
 
     for i = 1:length(nollat)
-        % mitï¿½ nollille tehdï¿½ï¿½n
+        % mitä nollille tehdään
         if nollat(i) < 0
             % negatiiviset nollat
             theta = theta + abs(nollat(i));
@@ -293,12 +310,15 @@ function [tau1, tau2, theta] = pidapp(navat, nollat, theta0)
             end
 
         else 
-            error('Nollat eivÃ¤t voi olla arvoa nolla, viritysparametrejÃ¤ ei voida laskea');
+            error('Nollat eivät voi olla arvoa nolla, viritysparametreja ei voida laskea');
         end
     end
 end
 
 function[Kc, tauI] = cleardelay(theta, k)
+    if theta == 0
+        error('Valitettavasti tälle yhdistelmälle ei voida laskea viritysparametreja');
+    end
     tauI = 0.08*theta;
     Kc = 0.5/k*tauI/theta;
 end
